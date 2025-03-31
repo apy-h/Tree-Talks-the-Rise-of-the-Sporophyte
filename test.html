@@ -2,177 +2,108 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Tree Talks: the Rise of the Sporophyte</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Phylogenetic Tree with Static Traits</title>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
   <style>
-    /* Basic styling for the whole page */
     body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f8f8;
       margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      overflow: hidden; /* Prevent page scrolling */
+      overflow: hidden;
     }
-
-    /* Container for the tree */
-    #tree-container {
-      width: 100vw;
-      height: 100vh;
-      background-color: #fafafa;
-    }
-
-    /* Tooltip styling */
-    .tooltip {
-      position: absolute;
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 8px;
-      border-radius: 4px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s ease-in-out;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      font-size: 14px;
-    }
-
-    /* Styling for nodes, links, and tick marks */
-    .node-circle {
-      fill: steelblue;
-      stroke: #fff;
-      stroke-width: 1.5px;
+    /* Node styles */
+    .node circle {
+      fill: #69b3a2;
+      stroke: #555;
+      stroke-width: 2px;
       cursor: pointer;
     }
-
+    .node text {
+      font-size: 14px;
+      fill: #333;
+      cursor: pointer;
+    }
+    /* Branch link styles */
     .link {
       fill: none;
-      stroke: #999;
+      stroke: #aaa;
       stroke-width: 2px;
     }
-
-    .tick-mark {
-      fill: tomato;
-      stroke: tomato;
+    /* Trait tick mark and label styles */
+    .trait-tick {
+      stroke: red;
+      stroke-width: 2px;
       cursor: pointer;
+    }
+    .trait {
+      font-size: 12px;
+      fill: red;
+      cursor: pointer;
+    }
+    /* Custom pop-up box styles */
+    .popup {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 1000;
+      width: 250px;
+    }
+    .popup .close-btn {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      color: red;
     }
   </style>
 </head>
 <body>
-  <div id="tree-container"></div>
-
-  <!-- D3.js library -->
-  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <!-- Custom pop-up box -->
+  <div id="popup" class="popup">
+    <span class="close-btn" onclick="closePopup()">×</span>
+    <p id="popup-content"></p>
+  </div>
   <script>
-    // Sample hierarchical data for the tree
+    // Define tree data with some descriptions.
+    // Traits are attached to the branch leading to a node.
+    // If no trait is provided, we will assign a static one.
     const treeData = {
       name: "Root",
+      description: "The common ancestor of all these groups.",
       traits: [],
       children: [
-        {
-          name: "Green Algae",
-          traits: [{ label: "Trait 1", info: "TBD 1"}],
-          children: [
-            {
-              name: "Chara and Nitella",
-              traits: [{ label: "Trait 2", info: "TBD 2"}]
-            },
-            {
-              name: "Choleochaete",
-              traits: [{ label: "Trait 3", info: "TBD 3"}]
-            },
-            {
-              name: "Zygnemetales",
-              traits: [{ label: "Trait 4", info: "TBD 4"}]
-            }
-          ]
-        },
-        {
-          name: "Group A",
-          traits: [{ label: "Trait A", info: "General trait for Group A." }],
-          children: [
-            {
-              name: "A1",
-              traits: [{ label: "Trait A1", info: "Sub-trait for A1." }],
-              children: []
-            },
-            {
-              name: "A2",
-              traits: [{ label: "Trait A2", info: "Sub-trait for A2." }],
-              children: []
-            }
-          ]
-        },
-        {
-          name: "Group B",
-          traits: [{ label: "Trait B", info: "General trait for Group B." }],
-          children: [
-            {
-              name: "B1",
-              traits: [{ label: "Trait B1", info: "Sub-trait for B1." }],
-              children: []
-            },
-            {
-              name: "B2",
-              traits: [{ label: "Trait B2", info: "Sub-trait for B2." }],
-              children: []
-            },
-            {
-              name: "B3",
-              traits: [{ label: "Trait B3", info: "Sub-trait for B3." }],
-              children: []
-            }
-          ]
-        }
-      ]
-    };
-
-/*
-const treeData = {
-  name: "Root",
-  traits: [],
-  children: [
-    {
-      name: "Ext.",
-      traits: [{ label: "Extinct Group", info: "This represents an extinct lineage." }],
-      children: []
-    },
-    {
-      name: "Group W",
-      traits: [],
-      children: [
-        {
-          name: "Chara and Nitella",
-          traits: [{ label: "Charophytes", info: "Freshwater green algae, close relatives of land plants." }],
-          children: []
-        },
+        { name: "Ext.", description: "An extinct lineage.", traits: [], children: [] },
         {
           name: "Group W",
-          traits: [],
+          description: "A major evolutionary branch.",
+          traits: [{ name: "Multicellularity", position: 0.3 }],
           children: [
-            {
-              name: "Choleochaete",
-              traits: [{ label: "Disk-shaped Algae", info: "A green alga with a growth pattern similar to land plants." }],
-              children: []
-            },
+            { name: "Chara and Nitella", description: "Charophyte algae relatives.", traits: [], children: [] },
             {
               name: "Group W",
-              traits: [],
+              description: "Another branch within Group W.",
+              traits: [{ name: "Cellulose Walls", position: 0.4 }],
               children: [
+                { name: "Choleochaete", description: "Another charophyte algae.", traits: [], children: [] },
                 {
-                  name: "Zygnemetales",
-                  traits: [{ label: "Closest Algal Relatives", info: "Unicellular and filamentous green algae, sister to land plants." }],
-                  children: []
-                },
-                {
-                  name: "Group for Land Plants",
-                  traits: [{ label: "Embryophytes", info: "Includes all land plants." }],
+                  name: "Group W",
+                  description: "A key divergence.",
+                  traits: [{ name: "Plasmodesmata", position: 0.5 }],
                   children: [
+                    { name: "Zygnemetales", description: "A group of green algae.", traits: [], children: [] },
                     {
-                      name: "Gymnosperms",
-                      traits: [{ label: "Seed Plants", info: "Non-flowering seed-producing plants like conifers." }],
-                      children: []
-                    },
-                    {
-                      name: "Angiosperms",
-                      traits: [{ label: "Flowering Plants", info: "Plants that produce flowers and fruits." }],
-                      children: []
+                      name: "Group for Land Plants",
+                      description: "This branch leads to land plants.",
+                      traits: [{ name: "Cuticle", position: 0.5 }],
+                      children: [
+                        { name: "Gymnosperms", description: "Non-flowering seed plants.", traits: [], children: [] },
+                        { name: "Angiosperms", description: "Flowering plants.", traits: [], children: [] }
+                      ]
                     }
                   ]
                 }
@@ -181,126 +112,172 @@ const treeData = {
           ]
         }
       ]
-    }
-  ]
-};
-*/
+    };
 
-    // Get container dimensions
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    // Create a tooltip div that will be used to display information on hover
-    const tooltip = d3.select("body")
-      .append("div")
-      .attr("class", "tooltip");
-
-    // Create an SVG element inside the container
-    const svg = d3.select("#tree-container")
-      .append("svg")
+    // Create the SVG container.
+    const svg = d3.select("body").append("svg")
       .attr("width", width)
-      .attr("height", height)
-      .style("cursor", "move");
+      .attr("height", height);
 
-    // Create a group (<g>) that will hold the tree and be subject to pan/zoom transformations
-    const container = svg.append("g");
-
-    // Define zoom behavior: you can pan (drag) and zoom (wheel or pinch)
+    // Define zoom behavior with translateExtent to restrict panning.
     const zoomBehavior = d3.zoom()
-      .scaleExtent([0.8, 1.6])  // Customize the minimum and maximum zoom
+      .scaleExtent([0.5, 5])
+      .translateExtent([[-100, -100], [width + 100, height + 100]])
       .on("zoom", (event) => {
-        container.attr("transform", event.transform);
+        g.attr("transform", event.transform);
       });
 
     svg.call(zoomBehavior);
 
-    // Create a tree layout (adjust size as needed)
-    const treeLayout = d3.tree().size([height - 100, width - 200]);
+    // Create a group for the tree elements.
+    const g = svg.append("g");
 
-    // Convert the data into a hierarchy structure
+    // Create the hierarchy from the tree data.
     const root = d3.hierarchy(treeData);
 
-    // Generate tree layout (node positions)
+    // Use a tree layout with increased vertical spacing ([vertical, horizontal]).
+    const treeLayout = d3.tree().nodeSize([80, 200]);
     treeLayout(root);
 
-    // Create links (branches) connecting the nodes
-    container.selectAll(".link")
+    // Align leaves at the rightmost position.
+    const maxDepth = Math.max(...root.descendants().map(d => d.depth));
+    root.descendants().forEach(d => d.y = d.depth * 200);
+    root.leaves().forEach(d => d.y = maxDepth * 200);
+
+    // For each link, ensure a static trait is attached.
+    root.links().forEach(link => {
+      // Always override with a static trait for the branch.
+      link.target.data.traits = [{
+        name: "Trait for " + link.target.data.name,
+        position: 0.5
+      }];
+    });
+
+    // Draw links (branches) between nodes.
+    g.selectAll(".link")
       .data(root.links())
       .enter()
       .append("path")
       .attr("class", "link")
+      .attr("stroke", "#555")
+      .attr("fill", "none")
+      .attr("stroke-width", 2)
       .attr("d", d3.linkHorizontal()
         .x(d => d.y)
-        .y(d => d.x)
-      );
+        .y(d => d.x));
 
-    // Create nodes as groups so we can attach both a circle and text
-    const node = container.selectAll(".node")
+    // Draw nodes as groups.
+    const node = g.selectAll(".node")
       .data(root.descendants())
       .enter()
       .append("g")
       .attr("class", "node")
-      .attr("transform", d => `translate(${d.y},${d.x})`);
-
-    // Draw node circles
-    node.append("circle")
-      .attr("class", "node-circle")
-      .attr("r", 6)
+      .attr("transform", d => `translate(${d.y},${d.x})`)
       .on("click", (event, d) => {
-        // You can customize node click behavior here (e.g., expand/collapse or show info)
-        alert(`Node clicked: ${d.data.name}`);
+        event.stopPropagation();
+        showPopup(event, d.data.name, d.data.description);
       });
 
-    // Add text labels to nodes
+    // Append circles for nodes.
+    node.append("circle")
+      .attr("r", 6)
+      .attr("fill", "#69b3a2");
+
+    // Append labels for nodes.
+    // For internal nodes (groups), offset the label upward.
     node.append("text")
-      .attr("dy", -10)
-      .attr("text-anchor", "middle")
-      .text(d => d.data.name);
+      .attr("dy", d => d.children ? -10 : 4)
+      .attr("x", 10)
+      .text(d => d.data.name)
+      .style("font-size", "14px");
 
-    // Create trait tick marks along each link that has traits.
-    const linksWithTraits = root.links().filter(d => d.target.data.traits && d.target.data.traits.length > 0);
-
-    linksWithTraits.forEach(linkData => {
-      const traits = linkData.target.data.traits;
-      const sourceX = linkData.source.x;
-      const sourceY = linkData.source.y;
-      const targetX = linkData.target.x;
-      const targetY = linkData.target.y;
-
-      // Calculate the vector between source and target
-      const dx = targetX - sourceX;
-      const dy = targetY - sourceY;
-
-      // Distribute tick marks evenly along the branch
-      traits.forEach((trait, i) => {
-        const fraction = (i + 1) / (traits.length + 1);
-        const tx = sourceY + dy ? (dy * fraction) : (dx * fraction); // this fallback is rarely needed
-        const ty = sourceX + dx ? (dx * fraction) : (dy * fraction);
-        // For clarity, we calculate positions using linear interpolation.
-        const interpX = sourceY + (targetY - sourceY) * fraction;
-        const interpY = sourceX + (targetX - sourceX) * fraction;
-
-        container.append("circle")
-          .attr("class", "tick-mark")
-          .attr("r", 4)
-          .attr("cx", interpX)
-          .attr("cy", interpY)
-          .on("mouseover", (event) => {
-            tooltip.style("opacity", 1)
-              .html(`<strong>${trait.label}</strong><br/>${trait.info || ""}`);
-          })
-          .on("mousemove", (event) => {
-            tooltip.style("left", (event.pageX + 10) + "px")
-              .style("top", (event.pageY + 10) + "px");
-          })
-          .on("mouseout", () => {
-            tooltip.style("opacity", 0);
-          })
-          .on("click", () => {
-            alert(`${trait.label}\n\n${trait.info}`);
-          });
+    // Draw static traits (tick marks and labels) on every branch.
+    g.selectAll(".trait-group")
+      .data(root.links())
+      .enter()
+      .each(function(link) {
+        const traits = link.target.data.traits;
+        traits.forEach(trait => {
+          // Get branch start and end coordinates.
+          const x0 = link.source.y, y0 = link.source.x;
+          const x1 = link.target.y, y1 = link.target.x;
+          // Interpolate along the branch.
+          const t = trait.position;
+          const interpX = x0 + (x1 - x0) * t;
+          const interpY = y0 + (y1 - y0) * t;
+          // Compute the perpendicular vector to the branch.
+          const dx = x1 - x0, dy = y1 - y0;
+          const len = Math.sqrt(dx * dx + dy * dy);
+          if (len === 0) return;
+          const perpX = -dy / len, perpY = dx / len;
+          // Define tick mark length.
+          const tickHalf = 5;
+          const tickX1 = interpX - tickHalf * perpX;
+          const tickY1 = interpY - tickHalf * perpY;
+          const tickX2 = interpX + tickHalf * perpX;
+          const tickY2 = interpY + tickHalf * perpY;
+          // Append the tick mark line on the branch.
+          g.append("line")
+            .attr("class", "trait-tick")
+            .attr("x1", tickX1)
+            .attr("y1", tickY1)
+            .attr("x2", tickX2)
+            .attr("y2", tickY2)
+            .on("click", (event) => {
+              event.stopPropagation();
+              showPopup(event, trait.name, "This is a key evolutionary trait: " + trait.name);
+            });
+          // Offset for text label so it doesn't overlap the branch.
+          const offset = 8;
+          const textX = interpX + (tickHalf + offset) * perpX;
+          const textY = interpY + (tickHalf + offset) * perpY;
+          // Append the trait label.
+          g.append("text")
+            .attr("class", "trait")
+            .attr("x", textX)
+            .attr("y", textY)
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle")
+            .text(trait.name)
+            .on("click", (event) => {
+              event.stopPropagation();
+              showPopup(event, trait.name, "This is a key evolutionary trait: " + trait.name);
+            });
+        });
       });
-    });
+
+    // Compute the bounding box of the tree from the nodes.
+    const xExtent = d3.extent(root.descendants(), d => d.x);
+    const yExtent = d3.extent(root.descendants(), d => d.y);
+    const treeWidth = yExtent[1] - yExtent[0];
+    const treeHeight = xExtent[1] - xExtent[0];
+    const margin = 40;
+    const scaleFactor = Math.min((width - margin * 2) / treeWidth, (height - margin * 2) / treeHeight);
+
+    // Compute translation to center the tree.
+    const translateX = (width - treeWidth * scaleFactor) / 2 - yExtent[0] * scaleFactor;
+    const translateY = (height - treeHeight * scaleFactor) / 2 - xExtent[0] * scaleFactor;
+
+    // Set the initial zoom transform so the entire tree fits the viewport.
+    svg.call(zoomBehavior).call(zoomBehavior.transform, d3.zoomIdentity.translate(translateX, translateY).scale(scaleFactor));
+
+    // Function to show the custom pop-up box.
+    function showPopup(event, title, description) {
+      const popup = document.getElementById("popup");
+      const content = document.getElementById("popup-content");
+      content.innerHTML = `<strong>${title}</strong><br>${description}`;
+      popup.style.display = "block";
+      popup.style.left = (event.pageX + 10) + "px";
+      popup.style.top = (event.pageY + 10) + "px";
+    }
+
+    // Function to close the pop-up box.
+    function closePopup() {
+      document.getElementById("popup").style.display = "none";
+    }
   </script>
 </body>
 </html>
