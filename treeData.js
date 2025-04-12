@@ -1,34 +1,84 @@
-export const treeData = {
-  name: "Root",
-  description: "The common ancestor of all these groups.",
+const treeData = {
+  name: "Origin of Life: BELLO",
+  description: "Common ancestor of all life",
   traits: [],
   children: [
-    { name: "Ext.", description: "An extinct lineage.", traits: [], children: [] },
     {
-      name: "Group W",
-      description: "A major evolutionary branch.",
-      traits: [{ name: "Multicellularity", position: 0.3 }],
+      name: "Bacteria",
+      description: "",
+      traits: [],
+      children: []
+    },
+    {
+      name: "Branch",
+      description: "",
+      traits: [],
       children: [
-        { name: "Chara and Nitella", description: "Charophyte algae relatives.", traits: [], children: [] },
         {
-          name: "Group W",
-          description: "Another branch within Group W.",
-          traits: [{ name: "Cellulose Walls", position: 0.4 }],
+          name: "Archaea",
+          description: "",
+          traits: [],
+          children: []
+        },
+        {
+          name: "Eukaryotes",
+          description: "",
+          traits: [],
           children: [
-            { name: "Choleochaete", description: "Another charophyte algae.", traits: [], children: [] },
             {
-              name: "Group W",
-              description: "A key divergence.",
-              traits: [{ name: "Plasmodesmata", position: 0.5 }],
+              name: "Animals",
+              description: "",
+              traits: [],
+              children: []
+            },
+            {
+              name: "Plants",
+              description: "",
+              traits: [],
               children: [
-                { name: "Zygnemetales", description: "A group of green algae.", traits: [], children: [] },
                 {
-                  name: "Group for Land Plants",
-                  description: "This branch leads to land plants.",
-                  traits: [{ name: "Cuticle", position: 0.5 }],
+                  name: "Other",
+                  description: "",
+                  traits: [],
+                  children: []
+                },
+                {
+                  name: "Archaeplastids",
+                  description: "",
+                  traits: [],
                   children: [
-                    { name: "Gymnosperms", description: "Non-flowering seed plants.", traits: [], children: [] },
-                    { name: "Angiosperms", description: "Flowering plants.", traits: [], children: [] }
+                    {
+                      name: "Glaucocystophytes",
+                      description: "",
+                      traits: [],
+                      children: []
+                    },
+                    {
+                      name: "Branch",
+                      description: "",
+                      traits: [],
+                      children: [
+                        {
+                          name: "Red Algae",
+                          description: "",
+                          traits: [],
+                          children: []
+                        },
+                        {
+                          name: "Branch",
+                          description: "",
+                          traits: [],
+                          children: [
+                            {
+                              name: "Other",
+                              description: "",
+                              traits: [],
+                              children: [],
+                            }
+                          ]
+                        }
+                      ]
+                    }
                   ]
                 }
               ]
