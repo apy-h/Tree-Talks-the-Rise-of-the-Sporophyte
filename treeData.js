@@ -1,5 +1,5 @@
 const treeData = {
-  name: "Origin of Life: BELLO",
+  name: "Origin of Life: BELLOs",
   description: "Common ancestor of all life",
   traits: [],
   children: [
