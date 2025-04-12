@@ -1,3 +1,4 @@
+<!-- python3 -m http.server -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -138,7 +139,7 @@
                               children: []
                             },
                             {
-                              name: "Branch",
+                              name: "Green Algae",
                               description: "",
                               traits: [],
                               children: [
@@ -171,21 +172,46 @@
       .attr("width", width)
       .attr("height", height);
 
+    // Create the hierarchy from the tree data.
+    const root = d3.hierarchy(treeData);
+
+    // Compute the bounding box of the tree from the nodes.
+    const xExtent = d3.extent(root.descendants(), d => d.x);
+    const yExtent = d3.extent(root.descendants(), d => d.y);
+    const treeWidth = yExtent[1] - yExtent[0];
+    const treeHeight = xExtent[1] - xExtent[0];
+    const margin = 100; // Increased margin to account for labels
+    const labelPadding = 150; // Extra padding for labels on the right
+    const scaleFactor = Math.min((width - margin * 2) / (treeWidth + labelPadding), (height - margin * 2) / treeHeight);
+
+    // Compute translation to center the tree with labels visible.
+    const translateX = (width - (treeWidth + labelPadding) * scaleFactor) / 2 - yExtent[0] * scaleFactor;
+    const translateY = (height - treeHeight * scaleFactor) / 2 - xExtent[0] * scaleFactor;
+
     // Define zoom behavior with translateExtent to restrict panning.
     const zoomBehavior = d3.zoom()
       .scaleExtent([0.5, 5])
-      .translateExtent([[-100, -100], [width + 100, height + 100]])
+      .translateExtent([[-100, -100], [width + 400, height + 100]])
       .on("zoom", (event) => {
         g.attr("transform", event.transform);
       });
+
+    // Set the initial zoom transform so the entire tree fits the viewport.
+    svg.call(zoomBehavior).call(
+      zoomBehavior.transform,
+      d3.zoomIdentity.translate(translateX, translateY).scale(scaleFactor)
+    );
+
+    // Update translateExtent to include space for labels.
+    zoomBehavior.translateExtent([
+      [-margin, -margin],
+      [width + labelPadding, height + margin]
+    ]);
 
     svg.call(zoomBehavior);
 
     // Create a group for the tree elements.
     const g = svg.append("g");
-
-    // Create the hierarchy from the tree data.
-    const root = d3.hierarchy(treeData);
 
     // Use a tree layout with increased vertical spacing ([vertical, horizontal]).
     const treeLayout = d3.tree().nodeSize([80, 200]);
@@ -288,21 +314,6 @@
             });
         });
       });
-
-    // Compute the bounding box of the tree from the nodes.
-    const xExtent = d3.extent(root.descendants(), d => d.x);
-    const yExtent = d3.extent(root.descendants(), d => d.y);
-    const treeWidth = yExtent[1] - yExtent[0];
-    const treeHeight = xExtent[1] - xExtent[0];
-    const margin = 40;
-    const scaleFactor = Math.min((width - margin * 2) / treeWidth, (height - margin * 2) / treeHeight);
-
-    // Compute translation to center the tree.
-    const translateX = (width - treeWidth * scaleFactor) / 2 - yExtent[0] * scaleFactor;
-    const translateY = (height - treeHeight * scaleFactor) / 2 - xExtent[0] * scaleFactor;
-
-    // Set the initial zoom transform so the entire tree fits the viewport.
-    svg.call(zoomBehavior).call(zoomBehavior.transform, d3.zoomIdentity.translate(translateX, translateY).scale(scaleFactor));
 
     // Function to show the custom pop-up box.
     function showPopup(event, title, description) {
