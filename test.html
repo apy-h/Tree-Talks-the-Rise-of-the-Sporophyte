@@ -181,12 +181,15 @@
     const treeWidth = yExtent[1] - yExtent[0];
     const treeHeight = xExtent[1] - xExtent[0];
     const margin = 100; // Increased margin to account for labels
-    const labelPadding = 150; // Extra padding for labels on the right
+    const labelPadding = 200; // Extra padding for labels on the right
     const scaleFactor = Math.min((width - margin * 2) / (treeWidth + labelPadding), (height - margin * 2) / treeHeight);
 
     // Compute translation to center the tree with labels visible.
     const translateX = (width - (treeWidth + labelPadding) * scaleFactor) / 2 - yExtent[0] * scaleFactor;
     const translateY = (height - treeHeight * scaleFactor) / 2 - xExtent[0] * scaleFactor;
+
+    // Create a group for the tree elements.
+    const g = svg.append("g");
 
     // Define zoom behavior with translateExtent to restrict panning.
     const zoomBehavior = d3.zoom()
@@ -209,9 +212,6 @@
     ]);
 
     svg.call(zoomBehavior);
-
-    // Create a group for the tree elements.
-    const g = svg.append("g");
 
     // Use a tree layout with increased vertical spacing ([vertical, horizontal]).
     const treeLayout = d3.tree().nodeSize([80, 200]);
